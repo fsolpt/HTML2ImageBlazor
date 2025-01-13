@@ -1,0 +1,91 @@
+﻿@page "/"
+@rendermode InteractiveWebAssembly
+<style>
+    .gradient-square {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(to right, red, yellow);
+    border: 1px solid black;
+    margin-top: 20px;
+    }
+</style>
+
+
+<PageTitle>Create Image From HTML Demo</PageTitle>
+
+<div @ref="element" style = "border:solid 1px green">
+    <h1>HTML 2 Image Demo</h1>
+
+    <p role="status">Counter: @currentCount</p>
+
+    <button class="btn btn-primary" @onclick="converttoimage">Convert to Image</button>
+    <button class="btn btn-secondary" @onclick="DownloadFile">Download Image</button>
+    <br />
+    This is a square:
+    <div class="gradient-square"></div>
+
+</div>
+
+<img src="@imageSrc" style="border:1px solid black" />
+
+<script language="javascript">
+    async function convertToPng(element) {
+    domtoimage.toPng(element)
+    try {
+    const dataUrl = await domtoimage.toPng(element);
+    return dataUrl; // dataUrl is already a string
+    } catch (error) {
+    console.error('Error converting to image:', error);
+    throw error;
+    }
+    };
+
+    function downloadFile(filename, dataUrl) {
+    var link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    }
+</script>
+
+@code {
+    [Inject] public required IJSRuntime JSRuntime { get; set; }
+    private int currentCount = 0;
+    private ElementReference element;
+    private string imageSrc = string.Empty;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+    private async void converttoimage()
+    {
+        IncrementCount();
+        
+        var PngUrl = await JSRuntime.InvokeAsync<string>("convertToPng", element);
+        imageSrc = PngUrl;
+
+        // This is to convert to binary to be sent to an API
+        // var binary = PngUrlToBinary(PngUrl);
+
+        StateHasChanged();
+    }
+
+    private byte[] PngUrlToBinary(string pngUrl)
+    {
+        var base64Data = pngUrl.Substring(pngUrl.IndexOf("base64,") + 7);
+        return Convert.FromBase64String(base64Data);
+    }
+
+    private async void DownloadFile()
+    {
+        if (!string.IsNullOrEmpty(imageSrc))
+        {
+            await JSRuntime.InvokeVoidAsync("downloadFile", "image.png", imageSrc);
+        }
+    }
+
+}

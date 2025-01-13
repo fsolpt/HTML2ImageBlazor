@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script language="javascript">
+        async function doit() {
+            var elements = document.getElementsByClassName("page");
+            if (elements.length > 0) {
+                domtoimage.toPng(elements[0])
+                    .then(function (dataUrl) {
+                        var img = new Image();
+                        img.src = dataUrl;
+                        document.body.appendChild(img);
+                        console.info(dataUrl);
+
+                    })
+                    .catch(function (error) {
+                        console.error('Error converting to image:', error);
+                    });
+            } else {
+                console.error("No elements with class 'page' found.");
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+    <div class="page">
+        This is a test
+        <button onclick="doit()" >Create Image</button>
+    </div>
+</body>
+</html>
